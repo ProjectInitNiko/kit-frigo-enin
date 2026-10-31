@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kit Frigo AI — Supervision & Réassort Prédictif</title>
+  <style>
+    :root {
+      --bg-space: #090D16;
+      --bg-card: rgba(22, 30, 46, 0.85);
+      --bg-card-hover: rgba(30, 41, 64, 0.95);
+      --bg-subtle: #131B2E;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      
+      --cyan-bright: #38BDF8;
+      --cyan-glow: rgba(56, 189, 248, 0.2);
+      --blue-accent: #3B82F6;
+      --indigo: #6366F1;
+      --emerald: #10B981;
+      --amber: #F59E0B;
+      --rose: #F43F5E;
+      --purple: #A855F7;
+      
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #060911 radial-gradient(circle at 50% 0%, #111A2E 0%, #060911 80%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px 10px;
+      overflow-x: hidden;
+    }
+
+    /* Container for showcase mode (desktop wrapper or real mobile) */
+    .showcase-banner {
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .showcase-banner .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--cyan-bright);
+      font-weight: 600;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan-bright);
+      box-shadow: 0 0 10px var(--cyan-bright);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+    }
+
+    /* Phone Shell */
+    .phone-frame {
+      width: 100%;
+      max-width: 420px;
+      height: 860px;
+      background: #0B111E;
+      border-radius: 46px;
+      border: 7px solid #232D3F;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.12);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Dynamic Island / Speaker Notch */
+    .phone-top-bar {
+      height: 38px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      z-index: 100;
+      background: rgba(11, 17, 30, 0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .dynamic-island {
+      width: 90px;
+      height: 22px;
+      background: #000;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 10px;
+      color: #38BDF8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .island-dot {
+      width: 5px;
+      height: 5px;
+      background: #10B981;
+      border-radius: 50%;
+    }
+
+    /* App Header */
+    .app-header {
+      padding: 12px 18px 10px;
+      background: rgba(11, 17, 30, 0.85);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(10px);
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284C7, #38BDF8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #FFFFFF;
+    }
+
+    .brand-subtitle {
+      font-size: 10px;
+      color: var(--cyan-bright);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-glow);
+    }
+
+    .badge-count {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: var(--rose);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #0B111E;
+    }
+
+    /* Content Area (Scrollable) */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 85px;
+      position: relative;
+    }
+
+    .content-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Tab views */
+    .tab-view {
+      display: none;
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+
+    .tab-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards generic */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-glow);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Hardware Sensor Banner (Kit Frigo Status) */
+    .sensor-kit-strip {
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 0.7));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kit-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kit-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan-bright);
+    }
+
+    .kit-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .kit-status {
+      font-size: 10px;
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sensor-tags {
+      display: flex;
+      gap: 6px;
+    }
+
+    .s-tag {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .s-tag.active {
+      color: var(--cyan-bright);
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    /* Key indicators grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--cyan-bright);
+    }
+
+    .metric-box.warn::before { background: var(--amber); }
+    .metric-box.alert::before { background: var(--rose); }
+    .metric-box.success::before { background: var(--emerald); }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .metric-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFF;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Quick AI Prediction Highlight Banner */
+    .ai-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .ai-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      background: rgba(168, 85, 247, 0.25);
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      border-radius: var(--radius-pill);
+      color: #E9D5FF;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .ai-banner h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+
+    .ai-banner p {
+      font-size: 11px;
+      color: #CBD5E1;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .ai-action-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #6366F1, #8B5CF6);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .ai-action-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    /* Cold room list item */
+    .room-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .room-chip {
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .room-chip.active {
+      background: var(--cyan-bright);
+      color: #060911;
+      border-color: var(--cyan-bright);
+      font-weight: 700;
+    }
+
+    /* Product Item with Weight Scale Bar */
+    .product-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 8px;
+      transition: all 0.15s;
+    }
+
+    .product-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    .prod-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .prod-emoji {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .prod-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .prod-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sensor-origin {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan-bright);
+    }
+
+    .prod-meta {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .prod-weight-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+
+    .prod-weight-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .prod-stats {
+      text-align: right;
+      padding-left: 10px;
+    }
+
+    .prod-current-weight {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .prod-status-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 2px;
+      display: inline-block;
+    }
+
+    .status-ok { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
+    .status-warn { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+    .status-danger { background: rgba(244, 63, 94, 0.15); color: var(--rose); }
+
+    /* Orders / Reassort section */
+    .order-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .order-supplier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .supplier-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .order-eta {
+      font-size: 10px;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .order-items-list {
+      margin-bottom: 10px;
+    }
+
+    .order-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 4px 0;
+      color: var(--text-muted);
+    }
+
+    .order-line b {
+      color: #FFF;
+    }
+
+    .order-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 6px;
+    }
+
+    .order-cost {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--emerald);
+    }
+
+    .btn-validate-order {
+      background: var(--blue-accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-validate-order:hover {
+      background: #2563EB;
+    }
+
+    .btn-validate-order.validated {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--emerald);
+      border: 1px solid var(--emerald);
+      cursor: default;
+    }
+
+    /* Learning Phase Interactive Component */
+    .learning-box {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.15));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .learning-progress-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      margin: 10px 0 6px;
+      overflow: hidden;
+    }
+
+    .learning-progress-fill {
+      width: 68%;
+      height: 100%;
+      background: linear-gradient(90deg, #38BDF8, #818CF8);
+      border-radius: 4px;
+    }
+
+    .learning-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Simulation Control Floating Pill for Presentation */
+    .demo-controller {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--cyan-glow);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .demo-title {
+      font-weight: 600;
+      color: var(--cyan-bright);
+    }
+
+    .demo-btn {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #FFF;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .demo-btn:hover {
+      background: rgba(56, 189, 248, 0.3);
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 68px;
+      background: rgba(11, 17, 30, 0.94);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px 8px;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .nav-item.active {
+      color: var(--cyan-bright);
+    }
+
+    .nav-item.active svg {
+      stroke: var(--cyan-bright);
+      filter: drop-shadow(0 0 6px var(--cyan-glow));
+    }
+
+    /* Modal for details / camera view */
+    .modal-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      background: #111827;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px 24px 0 0;
+      padding: 18px;
+      max-height: 85%;
+      overflow-y: auto;
+      animation: slideUp 0.25s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+
+    .modal-close-btn {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    /* Vision AI mockup */
+    .vision-stream-box {
+      width: 100%;
+      height: 160px;
+      background: #060911;
+      border-radius: 12px;
+      border: 1px solid var(--border-glow);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 12px 0;
+    }
+
+    .vision-target {
+      position: absolute;
+      border: 2px dashed var(--cyan-bright);
+      border-radius: 6px;
+      padding: 4px;
+      color: var(--cyan-bright);
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--cyan-bright);
+      box-shadow: 0 0 8px var(--cyan-bright);
+      animation: scan 2s linear infinite;
+    }
+
+    @keyframes scan {
+      0% { top: 0%; opacity: 0.8; }
+      50% { top: 95%; opacity: 0.8; }
+      100% { top: 0%; opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mode Présentation ENIN Info -->
+  <div class="showcase-banner">
+    <span class="badge-live">
+      <span class="pulse-dot"></span>
+      KIT FRIGO V1.0 CONNECTÉ
+    </span>
+    <span>Projet ENIN • Chambre Froide Pro</span>
+  </div>
+
+  <!-- SmartPhone Shell -->
+  <div class="phone-frame">
+    
+    <!-- Top Status Bar (iOS/Android feel) -->
+    <div class="phone-top-bar">
+      <span>16:45</span>
+      <div class="dynamic-island">
+        <span class="island-dot"></span>
+        <span>Kit AI En Ligne</span>
+      </div>
+      <span>5G • 98%</span>
+    </div>
+
+    <!-- Application Header -->
+    <header class="app-header">
+      <div class="brand-wrap">
+        <div class="brand-logo">❄️</div>
+        <div>
+          <div class="brand-title">Kit Frigo Pro</div>
+          <div class="brand-subtitle">IA & Tapis Balances</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="openCameraModal()" title="Vision IA Caméra">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="switchTab('alertes')" title="Alertes">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="badge-count" id="headerAlertCount">2</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="content-area">
+      
+      <!-- Interactive Presentation Controller -->
+      <div class="demo-controller">
+        <span class="demo-title">⚡ Démo Live Capteurs :</span>
+        <button class="demo-btn" onclick="simulateServiceRush()">Simuler Rush Soir</button>
+        <button class="demo-btn" onclick="resetStockValues()">Réinitialiser</button>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- TAB 1: DASHBOARD / ACCUEIL                     -->
+      <!-- ============================================== -->
+      <div id="tab-dashboard" class="tab-view active">
+        
+        <!-- Kit Frigo Hardware Status -->
+        <div class="sensor-kit-strip">
+          <div class="kit-badge">
+            <div class="kit-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="kit-name">Hub Kit Frigo #1</div>
+              <div class="kit-status">● Synchronisé (WiFi Pro)</div>
+            </div>
+          </div>
+          <div class="sensor-tags">
+            <span class="s-tag active" title="Tapis de pesée continue">⚖️ 4 Tapis</span>
+            <span class="s-tag active" title="Caméra grand angle">📷 2 Cam</span>
+          </div>
+        </div>
+
+        <!-- 4 Key Health Indicators -->
+        <div class="metrics-grid">
+          <div class="metric-box success">
+            <div class="metric-header">
+              <span>TEMPÉRATURE HACCP</span>
+              <span>❄️</span>
+            </div>
+            <div class="metric-val" id="dispTemp">2.4°C</div>
+            <div class="metric-sub">Conforme (Zone 0 à 4°C)</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-header">
+              <span>STOCK TOTAL PESÉ</span>
+              <span>⚖️</span>
+            </div>
+            <div class="metric-val" id="dispTotalWeight">84.2 kg</div>
+            <div class="metric-sub">Sur 110 kg max calibré</div>
+          </div>
+
+          <div class="metric-box alert">
+            <div class="metric-header">
+              <span>RUPTURES PROCHES</span>
+              <span>🚨</span>
+            </div>
+            <div class="metric-val" id="dispStockAlertCount">2 prod.</div>
+            <div class="metric-sub">&lt; 30% du seuil de service</div>
+          </div>
+
+          <div class="metric-box warn">
+            <div class="metric-header">
+              <span>DLC CRITIQUE</span>
+              <span>⏰</span>
+            </div>
+            <div class="metric-val" id="dispDlcCount">1 lot</div>
+            <div class="metric-sub">Péremption &lt; 24h</div>
+          </div>
+        </div>
+
+        <!-- AI Core Prediction Banner (Heart of the Project) -->
+        <div class="ai-banner">
+          <div class="ai-tag">
+            <span>✨</span> MOTEUR PRÉDICTIF IA
+          </div>
+          <h3>Prévision de commande pour Vendredi</h3>
+          <p>
+            Selon vos données de pesée sur 18 jours et les prévisions de réservations du restaurant, 
+            <strong>3 produits vont tomber en rupture d'ici demain soir</strong>.
+          </p>
+          <button class="ai-action-btn" onclick="switchTab('reassort')">
+            <span>🛒</span> Voir la commande suggérée (128.50 €)
+          </button>
+        </div>
+
+        <!-- Learning Phase Indicator (from PDF concept) -->
+        <div class="learning-box">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong style="font-size: 12px; color: #FFF;">🧠 Phase d'apprentissage de l'IA</strong>
+            <span style="font-size: 11px; color: var(--cyan-bright); font-weight: 700;">Jour 18 / 28</span>
+          </div>
+          <div class="learning-progress-track">
+            <div class="learning-progress-fill" style="width: 65%;"></div>
+          </div>
+          <div class="learning-footer">
+            <span>Précision actuelle : 89%</span>
+            <span>Objectif 4 sem. : 98%</span>
+          </div>
+        </div>
+
+        <!-- Quick Access Stock Watchlist -->
+        <div class="card">
+          <div class="card-title">
+            <span>Alertes Prioritaires du Jour</span>
+            <a href="#" onclick="switchTab('stock'); return false;" style="color: var(--cyan-bright); text-decoration: none; font-size: 11px;">Tout voir</a>
+          </div>
+
+          <div id="quickWatchlist">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================== -->
+      <!-- TAB 2: STOCKS & TAPIS BALANCES                 -->
+      <!-- ============================================== -->
+      <div id="tab-stock" class="tab-view">
+        <div class="card-title" style="margin-bottom: 8px;">
+          <span>Surveillance Multi-Capteurs</span>
+          <span style="color: var(--cyan-bright); font-size: 11px;">Poids + Vision IA</span>
+        </div>
+
+        <!-- Room selection -->
+        <div class="room-selector">
+          <button class="room-chip active" onclick="filterRoom('all', this)">Toutes les zones</button>
+          <button class="room-chip" onclick="filterRoom('zone-viande', this)">Zone Viandes & Poissons</button>
+          <button class="room-chip" onclick="filterRoom('zone-cremerie', this)">Zone Crèmerie & Produits Frais</button>
+          <button class="room-chip" onclick="filterRoom('zone-legumes', this)">Zone Maraîchage</button>
+        </div>
+
+        <!-- Stock items list -->
+        <div id="fullStockList">
+          <!-- Dynamic -->
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- TAB 3: RÉASSORT & COMMANDES IA                -->
+      <!-- ============================================== -->
+      <div id="tab-reassort" class="tab-view">
+        <div class="card-title" style="margin-bottom: 12px;">
+          <span>Commandes Prédites par l'IA</span>
+          <span style="color: var(--emerald); font-size: 11px;">● Optimisé Coût & Délais</span>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+          L'IA croise le <strong>poids restant sur chaque tapis</strong> avec la vitesse de consommation moyenne du service pour calculer <strong>la quantité exacte à commander</strong> sans gaspillage.
+        </div>
+
+        <!-- Supplier 1: Boucherie / Marée -->
+        <div class="order-card">
+          <div class="order-supplier-header">
+            <div>
+              <div class="supplier-name">🥩 Rungis Pro Viandes</div>
+              <div style="font-size: 10px; color: var(--text-dim);">Délai de livraison : 12h</div>
+            </div>
+            <span class="order-eta">⚡ URGENT - Commander avant 18h</span>
+          </div>
+          <div class="order-items-list">
+            <div class="order-line">
+              <span>🍗 Filets de poulet Label Rouge</span>
+              <span><b>+8.0 kg</b> (Manque 6.8kg)</span>
+            </div>
+            <div class="order-line">
+              <span>🥩 Pavés de saumon frais</span>
+              <span><b>+4.5 kg</b> (Rupture demain midi)</span>
+            </div>
+          </div>
+          <div class="order-action-bar">
+            <div>
+              <span style="font-size: 10px; color: var(--text-dim);">Total estimé</span>
+              <div class="order-cost">94.50 €</div>
+            </div>
+            <button class="btn-validate-order" onclick="validateOrder(this, 'Rungis Pro Viandes')">
+              <span>📤</span> Envoyer Bon de Commande
+            </button>
+          </div>
+        </div>
+
+        <!-- Supplier 2: Crèmerie -->
+        <div class="order-card">
+          <div class="order-supplier-header">
+            <div>
+              <div class="supplier-name">🧀 Coopérative Laitière Centrale</div>
+              <div style="font-size: 10px; color: var(--text-dim);">Délai : 24h</div>
+            </div>
+            <span style="font-size: 10px; color: var(--cyan-bright);">Prévu pour Samedi</span>
+          </div>
+          <div class="order-items-list">
+            <div class="order-line">
+              <span>🥛 Crème liquide 35%</span>
+              <span><b>+6 Briques</b> (Poids tapis bas)</span>
+            </div>
+            <div class="order-line">
+              <span>🧈 Beurre doux AOP</span>
+              <span><b>+5 kg</b> (Réassort préventif)</span>
+            </div>
+          </div>
+          <div class="order-action-bar">
+            <div>
+              <span style="font-size: 10px; color: var(--text-dim);">Total estimé</span>
+              <div class="order-cost">34.00 €</div>
+            </div>
+            <button class="btn-validate-order" onclick="validateOrder(this, 'Coopérative Laitière')">
+              <span>📤</span> Valider la commande
+            </button>
+          </div>
+        </div>
+
+        <!-- Supplier 3: Primeur -->
+        <div class="order-card">
+          <div class="order-supplier-header">
+            <div>
+              <div class="supplier-name">🥬 Terroirs & Maraîchage Local</div>
+              <div style="font-size: 10px; color: var(--text-dim);">Délai : 24h</div>
+            </div>
+            <span style="font-size: 10px; color: var(--emerald);">Stock sous contrôle</span>
+          </div>
+          <div class="order-items-list">
+            <div class="order-line">
+              <span>🍅 Tomates Roma</span>
+              <span><b>+10 kg</b> (Seuil normal)</span>
+            </div>
+          </div>
+          <div class="order-action-bar">
+            <div>
+              <span style="font-size: 10px; color: var(--text-dim);">Total estimé</span>
+              <div class="order-cost">22.00 €</div>
+            </div>
+            <button class="btn-validate-order" onclick="validateOrder(this, 'Terroirs Local')">
+              <span>📤</span> Valider la commande
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================== -->
+      <!-- TAB 4: ALERTES & HACCP                         -->
+      <!-- ============================================== -->
+      <div id="tab-alertes" class="tab-view">
+        <div class="card-title" style="margin-bottom: 12px;">
+          <span>Journal d'Alertes Sanitaires & Stock</span>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--rose);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <strong style="font-size: 12px; color: var(--rose);">⚠️ Péremption imminente : Saumon</strong>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                La caméra a détecté la DLC : <strong>01 Novembre</strong> (demain). Reste 1.2 kg sur le tapis balance #2.
+              </div>
+            </div>
+            <span style="font-size: 9px; color: var(--text-dim);">14:15</span>
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 8px;">
+            <button class="demo-btn" style="background: rgba(244, 63, 94, 0.2); border-color: var(--rose);" onclick="alert('Action suggérée : Inscrire le saumon au Plat du Jour ce midi pour éviter la perte !')">
+              💡 Suggestion Plat du Jour
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--amber);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <strong style="font-size: 12px; color: var(--amber);">⚖️ Tapis #1 : Seuil critique Poulet</strong>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Poids tombé à 1.4 kg (seuil de sécurité : 3.0 kg). Risque de rupture pour le service du soir.
+              </div>
+            </div>
+            <span style="font-size: 9px; color: var(--text-dim);">15:30</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--emerald);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <strong style="font-size: 12px; color: var(--emerald);">✅ Température HACCP Conforme</strong>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Moyenne 24h : 2.3°C. Aucune rupture de la chaîne du froid détectée.
+              </div>
+            </div>
+            <span style="font-size: 9px; color: var(--text-dim);">16:00</span>
+          </div>
+        </div>
+
+        <!-- Export HACCP button -->
+        <button class="ai-action-btn" style="background: var(--bg-card); border: 1px solid var(--border-subtle); margin-top: 10px;" onclick="alert('Relevé HACCP généré au format PDF réglementaire.')">
+          📄 Télécharger le registre HACCP du mois
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation Tabs -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('dashboard')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Accueil</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('stock')">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        <span>Stocks & Poids</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('reassort')">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        <span>Réassort IA</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('alertes')">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>Alertes</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Modal: Démo Reconnaissance Caméra IA -->
+  <div class="modal-overlay" id="cameraModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <button class="modal-close-btn" onclick="closeCameraModal()">&times;</button>
+      <h3 style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 4px;">Vision IA Kit Frigo</h3>
+      <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+        Flux vidéo analysé en local sur le Kit Frigo. La caméra identifie la forme, le logo de marque et lit la date limite si visible.
+      </p>
+
+      <div class="vision-stream-box">
+        <div class="scan-line"></div>
+        <div class="vision-target" style="top: 25px; left: 35px; width: 140px; height: 80px;">
+          🍗 Poulet Label Rouge<br>
+          Forme : Barquette standard<br>
+          DLC Détectée : 04/11
+        </div>
+        <div class="vision-target" style="bottom: 20px; right: 30px; width: 120px; height: 60px;">
+          🐟 Saumon Frais<br>
+          Poids croisé : 1.2 kg
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card); border-radius: 8px; padding: 10px; font-size: 11px; border: 1px solid var(--border-subtle);">
+        <strong style="color: var(--cyan-bright);">Fusion de données Capteurs :</strong>
+        <p style="color: var(--text-muted); margin-top: 4px;">
+          Le poids mesuré par le tapis-balance (1.2 kg) concorde à 99.4% avec le volume 3D reconstitué par les 2 caméras.
+        </p>
+      </div>
+
+      <button class="ai-action-btn" style="margin-top: 14px;" onclick="closeCameraModal()">
+        Fermer la vue Caméra
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Mock database reflecting the restaurant cold room environment
+    const stockDatabase = [
+      {
+        id: 'p1',
+        name: 'Filets de Poulet Label Rouge',
+        emoji: '🍗',
+        zone: 'zone-viande',
+        currentWeight: 1.4,
+        maxWeight: 10.0,
+        minThreshold: 3.0,
+        unit: 'kg',
+        dlc: 'Dans 3 jours',
+        dlcStatus: 'ok',
+        sensor: 'Tapis Balance #1 + Cam 1'
+      },
+      {
+        id: 'p2',
+        name: 'Pavés de Saumon de Norvège',
+        emoji: '🐟',
+        zone: 'zone-viande',
+        currentWeight: 1.2,
+        maxWeight: 6.0,
+        minThreshold: 2.5,
+        unit: 'kg',
+        dlc: 'Demain (Urgent)',
+        dlcStatus: 'danger',
+        sensor: 'Tapis Balance #2 + Cam 1'
+      },
+      {
+        id: 'p3',
+        name: 'Crème Fraîche Épaisse 35%',
+        emoji: '🥛',
+        zone: 'zone-cremerie',
+        currentWeight: 2.1,
+        maxWeight: 8.0,
+        minThreshold: 3.0,
+        unit: 'kg',
+        dlc: 'Dans 6 jours',
+        dlcStatus: 'ok',
+        sensor: 'Tapis Balance #3'
+      },
+      {
+        id: 'p4',
+        name: 'Beurre Doux Gastronomique',
+        emoji: '🧈',
+        zone: 'zone-cremerie',
+        currentWeight: 4.5,
+        maxWeight: 8.0,
+        minThreshold: 2.0,
+        unit: 'kg',
+        dlc: 'Dans 18 jours',
+        dlcStatus: 'ok',
+        sensor: 'Tapis Balance #3'
+      },
+      {
+        id: 'p5',
+        name: 'Tomates Grappes Roma',
+        emoji: '🍅',
+        zone: 'zone-legumes',
+        currentWeight: 5.2,
+        maxWeight: 15.0,
+        minThreshold: 4.0,
+        unit: 'kg',
+        dlc: 'Dans 5 jours',
+        dlcStatus: 'ok',
+        sensor: 'Tapis Balance #4 + Cam 2'
+      },
+      {
+        id: 'p6',
+        name: 'Salades Mesclun Bio',
+        emoji: '🥗',
+        zone: 'zone-legumes',
+        currentWeight: 1.1,
+        maxWeight: 4.0,
+        minThreshold: 1.5,
+        unit: 'kg',
+        dlc: 'Dans 2 jours',
+        dlcStatus: 'warn',
+        sensor: 'Tapis Balance #4 + Cam 2'
+      }
+    ];
+
+    // Navigation Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      const targetView = document.getElementById('tab-' + tabId);
+      if (targetView) targetView.classList.add('active');
+
+      const tabs = ['dashboard', 'stock', 'reassort', 'alertes'];
+      const index = tabs.indexOf(tabId);
+      if (index !== -1) {
+        document.querySelectorAll('.nav-item')[index].classList.add('active');
+      }
+    }
+
+    // Render stocks
+    function renderStock(filter = 'all') {
+      const fullListEl = document.getElementById('fullStockList');
+      const quickWatchlistEl = document.getElementById('quickWatchlist');
+
+      let totalWeight = 0;
+      let alertCount = 0;
+      let dlcCriticalCount = 0;
+
+      let fullHtml = '';
+      let quickHtml = '';
+
+      stockDatabase.forEach(item => {
+        totalWeight += item.currentWeight;
+        const pct = Math.min(100, Math.round((item.currentWeight / item.maxWeight) * 100));
+        
+        let statusClass = 'status-ok';
+        let statusLabel = 'Stock Bon';
+        let barColor = 'var(--emerald)';
+
+        if (item.currentWeight <= item.minThreshold) {
+          statusClass = 'status-danger';
+          statusLabel = 'Rupture imminente';
+          barColor = 'var(--rose)';
+          alertCount++;
+        } else if (pct < 45) {
+          statusClass = 'status-warn';
+          statusLabel = 'Stock Faible';
+          barColor = 'var(--amber)';
+        }
+
+        if (item.dlcStatus === 'danger') {
+          dlcCriticalCount++;
+        }
+
+        const row = `
+          <div class="product-row" data-zone="${item.zone}">
+            <div class="prod-main">
+              <div class="prod-emoji">${item.emoji}</div>
+              <div class="prod-info">
+                <div class="prod-title">
+                  <span>${item.name}</span>
+                </div>
+                <div class="prod-meta">
+                  <span class="sensor-origin">${item.sensor}</span>
+                  <span>DLC: ${item.dlc}</span>
+                </div>
+                <div class="prod-weight-bar-wrap">
+                  <div class="prod-weight-bar" style="width: ${pct}%; background: ${barColor};"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prod-stats">
+              <div class="prod-current-weight">${item.currentWeight.toFixed(1)} ${item.unit}</div>
+              <span class="prod-status-tag ${statusClass}">${statusLabel}</span>
+            </div>
+          </div>
+        `;
+
+        if (filter === 'all' || item.zone === filter) {
+          fullHtml += row;
+        }
+
+        // Quick list only for urgent items
+        if (item.currentWeight <= item.minThreshold || item.dlcStatus === 'danger') {
+          quickHtml += row;
+        }
+      });
+
+      fullListEl.innerHTML = fullHtml;
+      quickWatchlistEl.innerHTML = quickHtml;
+
+      // Update counters
+      document.getElementById('dispTotalWeight').innerText = totalWeight.toFixed(1) + ' kg';
+      document.getElementById('dispStockAlertCount').innerText = alertCount + ' prod.';
+      document.getElementById('dispDlcCount').innerText = dlcCriticalCount + ' lot';
+      document.getElementById('headerAlertCount').innerText = alertCount + dlcCriticalCount;
+    }
+
+    // Filter by cold room zone
+    function filterRoom(zone, btn) {
+      document.querySelectorAll('.room-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderStock(zone);
+    }
+
+    // Simulation: Evening service rush
+    function simulateServiceRush() {
+      stockDatabase.forEach(item => {
+        if (item.currentWeight > 1.0) {
+          item.currentWeight = Math.max(0.4, Number((item.currentWeight * 0.55).toFixed(1)));
+        }
+      });
+      document.getElementById('dispTemp').innerText = '3.6°C'; // Temp rises slightly due to doors opening
+      renderStock();
+      alert("⚡ Simulation active : Le service du soir a consommé les produits. Les tapis balances recalculent les quantités restantes en temps réel !");
+    }
+
+    // Reset simulation
+    function resetStockValues() {
+      stockDatabase[0].currentWeight = 1.4;
+      stockDatabase[1].currentWeight = 1.2;
+      stockDatabase[2].currentWeight = 2.1;
+      stockDatabase[3].currentWeight = 4.5;
+      stockDatabase[4].currentWeight = 5.2;
+      stockDatabase[5].currentWeight = 1.1;
+      document.getElementById('dispTemp').innerText = '2.4°C';
+      renderStock();
+    }
+
+    // Order validation button
+    function validateOrder(btn, supplier) {
+      btn.classList.add('validated');
+      btn.innerHTML = '✓ Commande Transmise';
+      alert(`Bon de commande télétransmis au fournisseur ${supplier} ! Notification de confirmation envoyée au Chef de Cuisine.`);
+    }
+
+    // Camera modal
+    function openCameraModal() {
+      document.getElementById('cameraModal').classList.add('active');
+    }
+
+    function closeCameraModal() {
+      document.getElementById('cameraModal').classList.remove('active');
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      renderStock();
+    });
+  </script>
+</body>
+</html>
